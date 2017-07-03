@@ -26,14 +26,15 @@ readDataSet <- function( x, nameX ) {
         Xt
 }
 
-run_analysis <- function() {
+run_analysis <- function(dsdir = NULL) {
         library(tidyr)
         library(dplyr)
         
         ## Obtain original work directory
         owd1 <- getwd()
-        setwd("F:/Coursera/R/UCI HAR Dataset")
-        
+        if (!is.null(dsdir)) {
+        setwd(dsdir)
+        }
         ## Read Features Names 
         fest <- read.table("features.txt")
         actlab <- read.table("activity_labels.txt")
@@ -57,22 +58,27 @@ run_analysis <- function() {
         
         ## Extracts only the measurements on the mean and standard deviation for each measurement.
         tot <- cbind(tot1[,c(1,2)], tot1[, vtot])
-        nm <- names(tot)
-        nm <- tolower(nm)
+       
         ## Appropriately labels the data set with descriptive variable name
-        nm <- sub("\\(", "", nm)
-        nm <- sub("\\)", "", nm)
-        nm <- gsub("\\-", ".", nm)
+        nm <- names(tot)
+        nm <- gsub("[(][)]", "", nm)
+        nm <- gsub("^t", "TimeDomain_", nm)
+        nm <- gsub("^f", "FrequencyDomain_", nm)
+        nm <- gsub("Acc", "Accelerometer", nm)
+        nm <- gsub("Gyro", "Gyroscope", nm)
+        nm <- gsub("Mag", "Magnitude", nm)
+        nm <- gsub("-mean-", "_Mean_", nm)
+        nm <- gsub("-std-", "_StandardDeviation_", nm)
+        nm <- gsub("-", "_", nm)
         names(tot) <- nm
-        ## creates a second, independent tidy data set with the average of each variable for each activity and each subject
-        sum <- tot %>%
-                group_by(activitylab, subject) %>%
-                summarise_each(funs(mean) )
-        
         ## Change to original Working Directory
         setwd(owd1)
-        
+        ## creates a second, independent tidy data set with the average of each variable for each activity and each subject
+       sum <- tot %>%
+                group_by(ActivityLab, Subject) %>%
+              summarise_each(funs(mean) )
+
         ## Return de DataSet
-        sum
+       sum
         
 }
